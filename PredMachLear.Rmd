@@ -1,0 +1,109 @@
+---
+title: "Prediction Machine Learning"
+author: "Sabank"
+date: "December 27, 2015"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
+
+#### Synopsis:
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it.
+
+The following analysis uses a random forest prediction algorithm to accomplish this task. With an estimated out-of-sample error of 0.3%, the model achieves an accuracy of 99.7%.
+
+#### 1. Introduction
+Six participants were asked to perform one set of 10 repetitions of barbell lifts in five different fashions, categorized as classes A, B, C, D and E. Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes.
+
+In this project, our goal was to use data from accelerometers on the bell, forearm, arm, and dumbell of the participants to build a prediction algorithm that takes these sensor readings and, given both a training and test dataset, correctly predicts the corresponding class (A to E).
+
+More information about the dataset is available here: Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. [Qualitative Activity Recognition of Weight Lifting Exercises](http://groupware.les.inf.puc-rio.br/har). Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13). Stuttgart, Germany: ACM SIGCHI, 2013.
+
+#### 2. Data Preparation
+##### 2.1 Set environment
+```{r, echo=TRUE}
+set.seed(987)
+library(caret)
+library(randomForest)
+library(e1071)
+```
+##### 2.2 Import data
+```{r, echo=TRUE}
+train_url <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+ptrain <- read.csv(url(train_url),header=TRUE,sep =",",na.strings=c("NA","#DIV/0!",""))
+test_url <- "http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+ptest <- read.csv(url(test_url),header=TRUE,sep =",",na.strings=c("NA","#DIV/0!",""))
+```
+##### 2.2 Data Processing for estimating out-of-sample error
+```{r, echo=TRUE}
+inTrain <- createDataPartition(y=ptrain$classe,p=0.7,list=F)
+ptrain_train <- ptrain[inTrain,]
+ptrain_valid <- ptrain[-inTrain,]
+# remove variables with nearly zero variance
+nzv <- nearZeroVar(ptrain_train)
+ptrain_train <- ptrain_train[,-nzv]
+ptrain_valid <- ptrain_valid[,-nzv]
+# remove variables that are almost always NA
+mostlyNA <- sapply(ptrain_train,function(x) mean(is.na(x))) > 0.95
+ptrain_train <- ptrain_train[,mostlyNA==F]
+ptrain_valid <- ptrain_valid[,mostlyNA==F]
+# remove variables that don't make intuitive sense for prediction (X, user_name, raw_timestamp_part_1, raw_timestamp_part_2, cvtd_timestamp), which happen to be the first five variables
+ptrain_train <- ptrain_train[,-(1:5)]
+ptrain_valid <- ptrain_valid[,-(1:5)]
+```
+
+#### 3. Predictive Model Building
+##### 3.1 Training the Model
+```{r, echo=TRUE}
+# instruct train to use 3-fold CV to select optimal tuning parameters
+fitControl <- trainControl(method="cv",number=3,verboseIter=F)
+# fit model on ptrain_train
+fit <- train(classe ~ .,data=ptrain_train,method="rf",trControl=fitControl)
+# print final model to see tuning parameters it chose
+fit$finalModel
+```
+
+##### 3.2 Evaluation and Selection
+```{r,echo=TRUE}
+# use model to predict classe in validation set (ptrain_valid)
+preds <- predict(fit,newdata=ptrain_valid)
+# show confusion matrix to get estimate of out-of-sample error
+confusionMatrix(ptrain_valid$classe,preds)
+```
+
+##### 3.3 Retraining the Model
+```{r,echo=TRUE}
+# remove variables with nearly zero variance
+nzv <- nearZeroVar(ptrain)
+ptrain <- ptrain[,-nzv]
+ptest <- ptest[,-nzv]
+# remove variables that are almost always NA
+mostlyNA <- sapply(ptrain,function(x) mean(is.na(x))) > 0.95
+ptrain <- ptrain[,mostlyNA==F]
+ptest <- ptest[,mostlyNA==F]
+# remove variables that don't make intuitive sense for prediction (X, user_name, raw_timestamp_part_1, raw_timestamp_part_2, cvtd_timestamp), which happen to be the first five variables
+ptrain <- ptrain[,-(1:5)]
+ptest <- ptest[,-(1:5)]
+# re-fit model using full training set (ptrain)
+fitControl <- trainControl(method="cv",number=3,verboseIter=F)
+fit <- train(classe ~ .,data=ptrain,method="rf",trControl=fitControl)
+```
+
+#### 4. Test Set Predictions
+```{r,echo=TRUE}
+# predict on test set
+preds <- predict(fit,newdata=ptest)
+# convert predictions to character vector
+preds <- as.character(preds)
+# create function to write predictions to files
+pml_write_files <- function(x) {
+    n <- length(x)
+    for(i in 1:n) {
+        filename <- paste0("problem_id_", i, ".txt")
+        write.table(x[i],file=filename,quote=F,row.names=F,col.names=F)
+    }
+}
+# create prediction files to submit
+pml_write_files(preds)
+```
