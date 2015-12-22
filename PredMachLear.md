@@ -5,7 +5,7 @@ December 27, 2015
 #### Synopsis:
 Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it.
 
-The following analysis uses a random forest-based prediction algorithm to accomplish this task. This type of algorithm is usually suited for providing categorical outputs. With an estimated out-of-sample error of 0.14%, the model achieves an accuracy of 99.86%.
+The following analysis uses a random forest-based prediction algorithm to accomplish this task. This type of algorithm is usually suited for providing categorical outputs. With an estimated out-of-sample error of 0.14%, the model achieves an accuracy of 99.86% in predicting the quality of execution of a particular activity.
 
 #### 1. Introduction
 Six participants were asked to perform one set of 10 repetitions of barbell lifts in five different fashions, categorized as classes A, B, C, D and E. Class A corresponds to the specified execution of the exercise, while the other 4 classes correspond to common mistakes.
@@ -122,8 +122,8 @@ fit$finalModel
 
 ```r
 # use model to predict 'classe' in ptrain_valid and print confusion matrix
-preds <- predict(fit,newdata=ptrain_valid)
-confusionMatrix(ptrain_valid$classe,preds)
+evalpred <- predict(fit,newdata=ptrain_valid)
+confusionMatrix(ptrain_valid$classe,evalpred)
 ```
 
 ```
@@ -205,8 +205,8 @@ fit$finalModel
 ##### 4.1 Predictions
 
 ```r
-preds <- predict(fit,newdata=ptest)
-preds
+answers <- predict(fit,newdata=ptest)
+answers
 ```
 
 ```
@@ -218,7 +218,7 @@ preds
 
 ```r
 # convert predictions to character vector
-preds <- as.character(preds)
+answers <- as.character(answers)
 # create function to write predictions to files
 pml_write_files <- function(x) {
     n <- length(x)
@@ -228,13 +228,19 @@ pml_write_files <- function(x) {
     }
 }
 # create prediction files to submit
-pml_write_files(preds)
+pml_write_files(answers)
 ```
 
 #### 5. Conclusion
-The random forest-based model applied to the test set provides an accuracy of 99.9% with 3-fold cross-validation parameter, thus the predicted accuracy for the out-of-sample error is 0.1%. This is a first-hand excellent result that did not invite to assess another algorithm. Moreover, the submission of the 20 files resulted in 100% accurate prediction.
+The random forest-based model applied to the test set provides an accuracy of 99.86% with 3-fold cross-validation parameter, thus the predicted accuracy for the out-of-sample error is 0.14%. This is a first-hand excellent result, also an expected outcome provided the type of the algorithm chosen, that did not invite to assess another algorithm. Moreover, the application of this model on the 20 test cases resulted in 100% prediction accuracy.
 
 #### 6. System Information
- sysname  release 
-"Darwin" "15.2.0" 
-[1] "R version 3.1.2 (2014-10-31)"
+
+```
+##  sysname  release 
+## "Darwin" "15.2.0"
+```
+
+```
+## [1] "R version 3.1.2 (2014-10-31)"
+```

@@ -71,7 +71,7 @@ img {
 <div id="synopsis" class="section level4">
 <h4>Synopsis:</h4>
 <p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it.</p>
-<p>The following analysis uses a random forest-based prediction algorithm to accomplish this task. This type of algorithm is usually suited for providing categorical outputs. With an estimated out-of-sample error of 0.14%, the model achieves an accuracy of 99.86%.</p>
+<p>The following analysis uses a random forest-based prediction algorithm to accomplish this task. This type of algorithm is usually suited for providing categorical outputs. With an estimated out-of-sample error of 0.14%, the model achieves an accuracy of 99.86% in predicting the quality of execution of a particular activity.</p>
 </div>
 <div id="introduction" class="section level4">
 <h4>1. Introduction</h4>
@@ -163,8 +163,8 @@ fit$finalModel</code></pre>
 <div id="evaluation" class="section level5">
 <h5>3.2 Evaluation</h5>
 <pre class="r"><code># use model to predict 'classe' in ptrain_valid and print confusion matrix
-preds &lt;- predict(fit,newdata=ptrain_valid)
-confusionMatrix(ptrain_valid$classe,preds)</code></pre>
+evalpred &lt;- predict(fit,newdata=ptrain_valid)
+confusionMatrix(ptrain_valid$classe,evalpred)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
@@ -238,15 +238,15 @@ fit$finalModel</code></pre>
 <h4>4. Application to ‘Test’ Set</h4>
 <div id="predictions" class="section level5">
 <h5>4.1 Predictions</h5>
-<pre class="r"><code>preds &lt;- predict(fit,newdata=ptest)
-preds</code></pre>
+<pre class="r"><code>answers &lt;- predict(fit,newdata=ptest)
+answers</code></pre>
 <pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
 ## Levels: A B C D E</code></pre>
 </div>
 <div id="file-creation" class="section level5">
 <h5>4.2 File creation</h5>
 <pre class="r"><code># convert predictions to character vector
-preds &lt;- as.character(preds)
+answers &lt;- as.character(answers)
 # create function to write predictions to files
 pml_write_files &lt;- function(x) {
     n &lt;- length(x)
@@ -256,16 +256,18 @@ pml_write_files &lt;- function(x) {
     }
 }
 # create prediction files to submit
-pml_write_files(preds)</code></pre>
+pml_write_files(answers)</code></pre>
 </div>
 </div>
 <div id="conclusion" class="section level4">
 <h4>5. Conclusion</h4>
-<p>The random forest-based model applied to the test set provides an accuracy of 99.9% with 3-fold cross-validation parameter, thus the predicted accuracy for the out-of-sample error is 0.1%. This is a first-hand excellent result that did not invite to assess another algorithm. Moreover, the submission of the 20 files resulted in 100% accurate prediction.</p>
+<p>The random forest-based model applied to the test set provides an accuracy of 99.86% with 3-fold cross-validation parameter, thus the predicted accuracy for the out-of-sample error is 0.14%. This is a first-hand excellent result, also an expected outcome provided the type of the algorithm chosen, that did not invite to assess another algorithm. Moreover, the application of this model on the 20 test cases resulted in 100% prediction accuracy.</p>
 </div>
 <div id="system-information" class="section level4">
 <h4>6. System Information</h4>
-<p>sysname release “Darwin” “15.2.0” [1] “R version 3.1.2 (2014-10-31)”</p>
+<pre><code>##  sysname  release 
+## &quot;Darwin&quot; &quot;15.2.0&quot;</code></pre>
+<pre><code>## [1] &quot;R version 3.1.2 (2014-10-31)&quot;</code></pre>
 </div>
 
 
